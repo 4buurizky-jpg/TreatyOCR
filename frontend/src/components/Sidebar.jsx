@@ -1,7 +1,10 @@
 import React from 'react';
 import { 
-  LayoutDashboard, FileUp, History, Settings, FileSpreadsheet 
+  LayoutDashboard, FileUp, History, Settings 
 } from 'lucide-react';
+
+// Import logo PNG dari folder assets
+import logoPng from '../assets/logo.png'; 
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const navItems = [
@@ -12,14 +15,23 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   ];
 
   return (
-    <aside className="w-60 bg-white border-r border-slate-200 p-5 flex flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
+    <aside className="w-64 bg-white border-r border-slate-200 p-5 flex flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
       <div className="space-y-6">
-        {/* Logo App */}
-        <div className="flex items-center gap-3 px-2">
-          <div className="bg-emerald-600 text-white p-2.5 rounded-xl shadow-xs">
-            <FileSpreadsheet className="w-5 h-5" />
+        {/* Logo & Branding */}
+        <div className="flex items-center gap-3 px-1">
+          <img 
+            src={logoPng} 
+            alt="Indore Treaty RU Logo" 
+            className="w-10 h-10 object-contain shrink-0 rounded-xl"
+          />
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-slate-900 tracking-tight leading-snug">
+              Indore Treaty RU
+            </span>
+            <span className="text-[11px] font-medium text-emerald-600 tracking-wide">
+              OCR Scanner
+            </span>
           </div>
-          <span className="font-bold text-lg text-slate-900 tracking-tight">Treaty OCR</span>
         </div>
 
         {/* Navigation Items */}
@@ -52,14 +64,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       </div>
 
       {/* User Footer */}
-      <div className="pt-4 border-t border-slate-200 flex items-center justify-between px-2">
+      <div className="pt-4 border-t border-slate-200 flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
             AR
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-800">Abu Rizky</p>
-            <p className="text-[10px] font-medium text-slate-400">Pro Plan</p>
           </div>
         </div>
       </div>

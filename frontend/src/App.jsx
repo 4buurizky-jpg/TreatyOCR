@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
-import FormsPage from './pages/FormsPage';
+import DashboardPage from './pages/DashboardPage';
 import OCRPage from './pages/OCRPage';
+import HistoryPage from './pages/HistoryPage';
 
 export default function App() {
-  // Set default tab ke 'Upload PDF' atau 'Forms'
   const [activeTab, setActiveTab] = useState('Upload PDF');
 
   const renderPage = () => {
     switch (activeTab) {
+      case 'Dashboard':
+        return <DashboardPage />;
       case 'Upload PDF':
         return <OCRPage />;
-      case 'Forms':
-        return <FormsPage />;
+      case 'History':
+        return <HistoryPage />;
       default:
         return (
           <div className="flex-1 p-8 flex items-center justify-center text-slate-400 text-sm">

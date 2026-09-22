@@ -14,24 +14,24 @@ frontend/
 │   └── favicon.ico
 ├── src/
 │   ├── assets/
-│   │   └── logo.png                # Custom PNG Branding Logo
-│   ├── components/                 # Global / Layout Components
-│   │   ├── Header.jsx              # Clean header component (title & subtitle)
-│   │   └── Sidebar.jsx             # Minimalist navigation sidebar with logo branding
-│   ├── features/                   # Feature-based Modular Components
+│   │   └── logo.png                # Logo kustom untuk branding aplikasi
+│   ├── components/                 # Komponen Global / Tata Letak (Layout)
+│   │   ├── Header.jsx              # Komponen header bersih (judul & subjudul)
+│   │   └── Sidebar.jsx             # Sidebar navigasi minimalis dengan logo branding
+│   ├── features/                   # Komponen Modular Berbasis Fitur
 │   │   ├── forms/
 │   │   │   └── components/
-│   │   │       └── PDFUploader.jsx  # 2-Step PDF scan & extract with multi-sheet preview
+│   │   │       └── PDFUploader.jsx  # Fitur 2-step pemindaian & ekstraksi PDF dengan pratinjau multi-sheet
 │   │   └── history/
 │   │       └── components/
-│   │           └── HistoryTable.jsx # History management with localStorage & preview modal
-│   ├── pages/                      # Page Views / Routes
-│   │   ├── DashboardPage.jsx       # Coming Soon dashboard view
-│   │   ├── HistoryPage.jsx         # Processed extraction history page
-│   │   └── OCRPage.jsx             # Main PDF Upload & Processing workspace
-│   ├── App.jsx                     # Root application layout & tab switcher
-│   ├── main.jsx                    # Application entry point
-│   └── index.css                   # Tailwind CSS global styles
+│   │           └── HistoryTable.jsx # Manajemen riwayat dengan localStorage & modal pratinjau
+│   ├── pages/                      # Tampilan Halaman / Rute (Routes)
+│   │   ├── DashboardPage.jsx       # Tampilan dashboard status 'Coming Soon'
+│   │   ├── HistoryPage.jsx         # Halaman riwayat hasil ekstraksi dokumen
+│   │   └── OCRPage.jsx             # Halaman utama untuk pengunggahan & pemrosesan PDF
+│   ├── App.jsx                     # Tata letak utama aplikasi & pengalih tab navigasi
+│   ├── main.jsx                    # Titik masuk (entry point) aplikasi React
+│   └── index.css                   # Gaya global Tailwind CSS
 ├── .gitignore
 ├── package.json
 ├── tailwind.config.js

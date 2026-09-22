@@ -66,12 +66,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       {/* User Footer */}
       <div className="pt-4 border-t border-slate-200 flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
-            AR
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-800">Abu Rizky</p>
-          </div>
+
         </div>
       </div>
     </aside>

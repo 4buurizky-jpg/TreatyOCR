@@ -10,20 +10,20 @@
 ```text
 backend/
 ├── endpoints/
-│   └── ocr.py                 # Primary APIRouter handling scan, process & download
+│   └── ocr.py                 # Router API utama untuk pemindaian (scan), pemrosesan, dan unduhan
 ├── parser/
 │   ├── __init__.py
-│   ├── base_parser.py         # Abstract base class for parser implementations
-│   ├── tripakarta.py          # Tri Pakarta PDF table extraction logic
-│   └── aca.py                 # ACA Insurance PDF table extraction logic
+│   ├── base_parser.py         # Class abstrak utama (base class) untuk modul parser
+│   ├── tripakarta.py          # Logika ekstraksi tabel PDF khusus Tri Pakarta
+│   └── aca.py                 # Logika ekstraksi tabel PDF khusus ACA Insurance
 ├── schemas/
 │   ├── __init__.py
-│   └── commission.py          # Pydantic schemas for data validation
+│   └── commission.py          # Skema Pydantic untuk validasi struktur data
 ├── utils/
-│   ├── excel_writer.py        # Utility for writing dataframes to styled Excel files
-│   ├── helper.py              # Data cleaning & string manipulation helpers
-│   ├── ocr.py                 # Tesseract OCR processing utilities
-│   └── pdf_reader.py          # pdfplumber wrapper for reading PDF text & tables
-├── build.py                   # Build script or standalone execution entry
-├── main.py                    # FastAPI initialization, CORS middleware & router setup
-└── requirements.txt           # Python dependencies
+│   ├── excel_writer.py        # Utilitas penulisan DataFrame ke berkas Excel berformat
+│   ├── helper.py              # Helper pembersihan data & manipulasi teks/string
+│   ├── ocr.py                 # Utilitas pemrosesan OCR Tesseract
+│   └── pdf_reader.py          # Modul pdfplumber untuk pembacaan teks & tabel PDF
+├── build.py                   # Skrip build atau titik eksekusi aplikasi berdiri sendiri
+├── main.py                    # Inisialisasi FastAPI, middleware CORS & konfigurasi router
+└── requirements.txt           # Daftar dependensi/pustaka Python

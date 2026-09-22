@@ -165,24 +165,7 @@ export default function PDFUploader({ onProcessSuccess }) {
           
           <div className="text-center space-y-1">
             <h2 className="text-lg font-bold text-slate-900 tracking-tight">Unggah Berkas PDF Treaty</h2>
-            <p className="text-xs text-slate-500">Pilih Cedant dan pindai struktur tabel sebelum ekstraksi Excel</p>
-          </div>
-
-          {/* Selector Cedant */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-              Pilih Cedant / Asuransi Ceding:
-            </label>
-            <select
-              value={cedant}
-              onChange={(e) => setCedant(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer"
-            >
-              <option value="auto">Deteksi Otomatis (Auto Detect)</option>
-              <option value="tripakarta">PT Asuransi Tri Pakarta</option>
-              <option value="aca">PT Asuransi Central Asia (ACA)</option>
-            </select>
+            <p className="text-xs text-slate-500">Pindai struktur tabel sebelum ekstraksi Excel</p>
           </div>
 
           {/* Drag & Drop Zone */}

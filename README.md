@@ -30,9 +30,6 @@ Platform ini mengintegrasikan antarmuka web modern berbasis **React 19, Vite, Ta
 * **Dual-Step OCR & Scanning Workflow:**
   * **Fast Table Scan (`/api/scan-pdf`):** Pemindaian cepat struktur tabel pada 5 halaman pertama dokumen PDF menggunakan teknik *early exit* untuk menghemat sumber daya komputasi.
   * **Full Table Extraction (`/api/process-pdf`):** Ekstraksi rinci tabel PDF Treaty menjadi data JSON dan berkas spreadsheet Excel siap unduh.
-* **Cedant Auto-Detect & Dynamic Keyword Parser Matching:**
-  * Penentuan parser otomatis berdasarkan kata kunci nama berkas (misal: `"tripakarta"`, `"aca"`) atau selector pilihan cedant manual.
-  * *Fallback mechanism* cerdas ke `TripakartaParser` jika jenis cedant tidak dikenali secara spesifik.
 * **Interactive Multi-Sheet Preview & Tab Navigation:**
   * Dukungan visualisasi multi-sheet secara *real-time* untuk tabel **Sliding Scale** dan **Profit Commission**.
   * Pengguna dapat memeriksa kelengkapan kolom dan baris data hasil parsing langsung di antarmuka web sebelum mengunduh berkas.

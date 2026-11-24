@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from endpoints.ocr import router as ocr_router
+from endpoints import ocr, auth_users
 
 app = FastAPI(
     title="Treaty OCR API",
@@ -19,3 +20,4 @@ app.add_middleware(
 
 # Daftarkan router dari endpoints/ocr.py
 app.include_router(ocr_router)
+app.include_router(auth_users.router)

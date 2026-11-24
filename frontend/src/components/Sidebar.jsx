@@ -8,7 +8,14 @@ import {
 // Import logo IndonesiaRe
 import logoPng from '../assets/logo.png'; 
 
-export default function Sidebar({ activeTab, setActiveTab, selectedDocType, setSelectedDocType }) {
+export default function Sidebar({ 
+  activeTab, 
+  setActiveTab, 
+  selectedDocType, 
+  setSelectedDocType,
+  currentUser,
+  onLogout
+}) {
   const [isBorderoOpen, setIsBorderoOpen] = useState(true);
   const [storedDocsCount, setStoredDocsCount] = useState(0);
 
@@ -29,6 +36,16 @@ export default function Sidebar({ activeTab, setActiveTab, selectedDocType, setS
       setSelectedDocType(docType);
     }
   };
+
+  // Ambil nama, role, dan buat inisial avatar otomatis dari akun yang login
+  const displayName = currentUser?.full_name || currentUser?.username || 'Abu Rizki';
+  const displayRole = currentUser?.role || 'OCR Operator';
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 p-5 flex flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
@@ -251,20 +268,21 @@ export default function Sidebar({ activeTab, setActiveTab, selectedDocType, setS
       <div className="pt-4 border-t border-slate-200 flex items-center justify-between px-1 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-200">
-            AR
+            {initials}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-xs text-slate-800 truncate" title="Abu Rizki">
-              Abu Rizki
+            <span className="font-semibold text-xs text-slate-800 truncate" title={displayName}>
+              {displayName}
             </span>
             <span className="text-[10px] text-slate-400 truncate">
-              OCR Operator
+              {displayRole}
             </span>
           </div>
         </div>
 
         <button
           type="button"
+          onClick={onLogout}
           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
           title="Keluar"
         >

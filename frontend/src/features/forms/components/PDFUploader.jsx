@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { 
   UploadCloud, FileText, Download, CheckCircle2, 
-  AlertCircle, Loader2, Trash2, RefreshCw, Scan, Building2, TableProperties, FileSpreadsheet
+  AlertCircle, Loader2, Trash2, RefreshCw, Sparkles, 
+  TableProperties, FileSpreadsheet, AlertTriangle 
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -13,7 +14,7 @@ export default function PDFUploader({ onProcessSuccess }) {
   
   // States Alur Pemrosesan
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState(null);
+  const [scanResult, setScanResult] = useState(null); // { table_detected: bool, detected_pages: [], message: "" }
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   
@@ -22,6 +23,34 @@ export default function PDFUploader({ onProcessSuccess }) {
 
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // Fungsi internal untuk memicu pemindaian otomatis ke backend
+  const triggerAutoScan = async (selectedFile) => {
+    setIsScanning(true);
+    setError('');
+    setScanResult(null);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/scan-pdf`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setScanResult(response.data);
+    } catch (err) {
+      setError(
+        err.response?.data?.detail || 'Gagal memindai berkas PDF. Pastikan backend FastAPI berjalan.'
+      );
+      setScanResult({
+        table_detected: false,
+        detected_pages: [],
+        message: 'Gagal mendeteksi struktur tabel.'
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   // Handle Pilih File
   const handleFileChange = (e) => {
@@ -34,7 +63,8 @@ export default function PDFUploader({ onProcessSuccess }) {
       setFile(selectedFile);
       setError('');
       setResult(null);
-      setScanResult(null);
+      // Otomatis jalankan pemindaian
+      triggerAutoScan(selectedFile);
     }
   };
 
@@ -60,36 +90,12 @@ export default function PDFUploader({ onProcessSuccess }) {
       setFile(droppedFile);
       setError('');
       setResult(null);
-      setScanResult(null);
+      // Otomatis jalankan pemindaian
+      triggerAutoScan(droppedFile);
     }
   };
 
-  // Step 1: Scan Dokumen Riil ke Backend FastAPI
-  const handleScanDocument = async () => {
-    if (!file) return;
-
-    setIsScanning(true);
-    setError('');
-    setScanResult(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post(`${API_BASE_URL}/scan-pdf`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setScanResult(response.data);
-    } catch (err) {
-      setError(
-        err.response?.data?.detail || 'Gagal memindai berkas PDF. Pastikan backend FastAPI berjalan.'
-      );
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
-  // Step 2: Kirim PDF ke Backend untuk Ekstraksi
+  // Step: Kirim PDF ke Backend untuk Ekstraksi
   const handleUpload = async () => {
     if (!file) {
       setError('Silakan pilih berkas PDF terlebih dahulu.');
@@ -121,7 +127,6 @@ export default function PDFUploader({ onProcessSuccess }) {
       // Simpan Riwayat ke LocalStorage
       const now = new Date();
       const formattedDate = now.toISOString().replace('T', ' ').substring(0, 19);
-
       const totalRows = (resData.data?.sliding_scale?.length || 0) + (resData.data?.profit_commission?.length || 0);
 
       const newHistoryItem = {
@@ -155,6 +160,7 @@ export default function PDFUploader({ onProcessSuccess }) {
     setResult(null);
     setScanResult(null);
     setError('');
+    setIsScanning(false);
   };
 
   return (
@@ -168,94 +174,94 @@ export default function PDFUploader({ onProcessSuccess }) {
             <p className="text-xs text-slate-500">Pindai struktur tabel sebelum ekstraksi Excel</p>
           </div>
 
-          {/* Drag & Drop Zone */}
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-2xl p-7 text-center flex flex-col items-center justify-center transition-all ${
-              isDragging
-                ? 'border-emerald-500 bg-emerald-50/50 scale-[0.99]'
-                : 'border-slate-200 hover:border-emerald-400 bg-slate-50/50'
-            }`}
-          >
-            <div className="bg-white p-3 rounded-xl shadow-xs border border-slate-200 mb-3 text-emerald-600">
-              <UploadCloud className="w-7 h-7" />
-            </div>
-            
-            <p className="text-sm font-semibold text-slate-700 mb-1">
-              Tarik & lepas berkas PDF di sini
-            </p>
-            <p className="text-xs text-slate-400 mb-4">Mendukung berkas PDF hingga 15MB</p>
-
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              className="hidden"
-              id="pdf-upload"
-            />
-            <label
-              htmlFor="pdf-upload"
-              className="cursor-pointer bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-xl text-xs shadow-xs transition inline-flex items-center gap-2"
+          {/* Drag & Drop Zone (Hanya tampil jika belum ada file yang dipilih) */}
+          {!file && (
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center flex flex-col items-center justify-center transition-all ${
+                isDragging
+                  ? 'border-emerald-500 bg-emerald-50/50 scale-[0.99]'
+                  : 'border-slate-200 hover:border-emerald-400 bg-slate-50/50'
+              }`}
             >
-              Pilih Berkas Manual
-            </label>
-          </div>
+              <div className="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200 mb-3 text-emerald-600">
+                <UploadCloud className="w-8 h-8" />
+              </div>
+              
+              <p className="text-sm font-semibold text-slate-700 mb-1">
+                Tarik & lepas berkas PDF di sini
+              </p>
+              <p className="text-xs text-slate-400 mb-4">Mendukung berkas PDF hingga 15MB</p>
 
-          {/* Action Bar Pemindaian */}
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                id="pdf-upload"
+              />
+              <label
+                htmlFor="pdf-upload"
+                className="cursor-pointer bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4.5 py-2.5 rounded-xl text-xs shadow-xs transition inline-flex items-center gap-2"
+              >
+                Pilih Berkas Manual
+              </label>
+            </div>
+          )}
+
+          {/* Bubble Card File Modern (Muncul otomatis setelah file dipilih & di-scan) */}
           {file && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <FileText className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <div className="truncate">
-                    <p className="text-xs font-semibold truncate">{file.name}</p>
-                    <p className="text-[10px] text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 space-y-4 transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3.5 overflow-hidden">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">{file.name}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  {!scanResult && (
-                    <button
-                      type="button"
-                      onClick={handleScanDocument}
-                      disabled={isScanning}
-                      className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-semibold rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Scan className="w-3.5 h-3.5" />}
-                      {isScanning ? 'Pindai...' : 'Pindai Tabel'}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                    title="Hapus File"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                  title="Hapus File"
+                >
+                  <Trash2 className="w-4.5 h-4.5" />
+                </button>
               </div>
 
-              {/* Status Hasil Pindai */}
-              {scanResult && (
-                <div className={`flex items-start gap-2.5 p-3.5 rounded-xl text-xs border ${
-                  scanResult.table_detected 
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                    : 'bg-amber-50 text-amber-800 border-amber-200'
-                }`}>
-                  <TableProperties className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-                  <div>
-                    <p className="font-semibold">{scanResult.message}</p>
-                    <p className="text-[11px] opacity-80 mt-0.5">
-                      {scanResult.table_detected 
-                        ? 'Tabel siap diekstrak. Silakan klik tombol di bawah untuk memulai OCR.' 
-                        : 'Tidak ada tabel valid untuk diekstrak pada file ini.'}
-                    </p>
+              {/* Status Bar Otomatis di dalam Bubble Card */}
+              <div className="pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-500 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Status Analisis Dokumen:
+                </span>
+
+                {isScanning && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium animate-pulse text-[11px]">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Memindai Struktur Tabel...
                   </div>
-                </div>
-              )}
+                )}
+
+                {!isScanning && scanResult?.table_detected && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium text-[11px] shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{scanResult.message}</span>
+                  </div>
+                )}
+
+                {!isScanning && scanResult && !scanResult.table_detected && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium text-[11px]">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Tidak Ada Struktur Tabel</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -267,17 +273,22 @@ export default function PDFUploader({ onProcessSuccess }) {
             </div>
           )}
 
-          {/* Tombol Ekstraksi */}
+          {/* Tombol Ekstraksi Utama */}
           <button
             type="button"
             onClick={handleUpload}
-            disabled={loading || !file || !scanResult?.table_detected}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer"
+            disabled={loading || !file || isScanning || !scanResult?.table_detected}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer disabled:cursor-not-allowed border disabled:border-slate-200"
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Mengekstrak Data Tabel PDF...
+              </>
+            ) : isScanning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sedang Memindai Otomatis...
               </>
             ) : (
               'Proses Ekstraksi PDF'

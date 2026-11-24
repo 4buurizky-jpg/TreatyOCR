@@ -2,15 +2,14 @@ import io
 import os
 import shutil
 import tempfile
-import openpyxl
-from openpyxl.styles import Border, Font, Side
-import pandas as pd
 import pdfplumber
+import pandas as pd
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-# Import Parser yang tersedia
-from parser.tripakarta import TripakartaParser
+# Import GenericParser dan ExcelLoader
+from parser.generic_parser import GenericParser
+from exporter.loader import ExcelLoader
 
 router = APIRouter(prefix="/api", tags=["OCR Processor"])
 
@@ -26,15 +25,20 @@ async def scan_pdf(file: UploadFile = File(...)):
         detected_pages = []
 
         with pdfplumber.open(io.BytesIO(contents)) as pdf:
-            max_pages = min(len(pdf.pages), 5)
+            max_pages = min(len(pdf.pages), 10)
             
             for page_idx in range(max_pages):
                 page = pdf.pages[page_idx]
+                page_text = (page.extract_text() or "").lower()
                 tables = page.extract_tables()
-                if tables and len(tables) > 0:
+
+                # Cek apakah ada garis tabel visual OR ada kata kunci struktur komisi/sliding scale
+                has_visual_table = bool(tables and len(tables) > 0)
+                has_text_table = any(kw in page_text for kw in ["sliding scale", "loss ratio", "ri comm", "profit commission"])
+
+                if has_visual_table or has_text_table:
                     table_found = True
                     detected_pages.append(page_idx + 1)
-                    break
 
         if not table_found:
             return {
@@ -61,30 +65,28 @@ async def process_pdf(
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File harus berformat PDF")
 
-    # Save temporary PDF file
+    # Simpan file PDF sementara untuk diproses parser
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf_file:
         shutil.copyfileobj(file.file, temp_pdf_file)
         temp_pdf_path = temp_pdf_file.name
 
-    excel_filename = f"{os.path.basename(temp_pdf_path).replace('.pdf', '')}_output.xlsx"
-    output_excel_path = os.path.join(tempfile.gettempdir(), excel_filename)
-
     try:
         filename_lower = file.filename.lower()
 
-        # Deteksi parser berdasarkan Pilihan Manual ATAU Nama Berkas PDF
-        if cedant == "aca" or "aca" in filename_lower:
-            # Jika nanti ACAParser sudah dibuat, panggil ACAParser(temp_pdf_path) di sini
-            parser = TripakartaParser(temp_pdf_path) 
-            parsed_type = "ACA Insurance"
-        elif cedant == "tripakarta" or any(kw in filename_lower for kw in ["tripakarta", "tri pakarta", "tp"]):
-            parser = TripakartaParser(temp_pdf_path)
-            parsed_type = "Tri Pakarta"
-        else:
-            parser = TripakartaParser(temp_pdf_path)
-            parsed_type = "Tri Pakarta (Auto Detect)"
-
+        # 1. Eksekusi GenericParser untuk mengekstrak data dari PDF
+        parser = GenericParser(temp_pdf_path)
         dfs = parser.process()
+        headers = parser.parse_headers()
+
+        # Penentuan label parsed_type untuk tampilan UI / History
+        if cedant != "auto" and cedant != "":
+            parsed_type = f"{cedant.upper()} (Generic Parser)"
+        elif "aca" in filename_lower:
+            parsed_type = "ACA Insurance (Auto Detect)"
+        elif any(kw in filename_lower for kw in ["tripakarta", "tri pakarta", "tp"]):
+            parsed_type = "Tri Pakarta (Auto Detect)"
+        else:
+            parsed_type = "Generic Treaty Parser"
 
         df_sliding = dfs.get("Sliding Scale", pd.DataFrame())
         df_profit = dfs.get("Profit Commission", pd.DataFrame())
@@ -92,27 +94,18 @@ async def process_pdf(
         if df_sliding.empty and df_profit.empty:
             raise HTTPException(status_code=422, detail="Tidak ada data tabel yang dapat diekstrak")
 
-        # Export to Excel
-        with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
-            if not df_sliding.empty:
-                df_sliding.to_excel(writer, sheet_name='Sliding Scale', index=False)
-            if not df_profit.empty:
-                df_profit.to_excel(writer, sheet_name='Profit Commission', index=False)
+        # 2. Simpan hasil ekstraksi ke Excel via ExcelLoader
+        company_name = headers.get("Reinsured", "Unknown_Company")
+        loader = ExcelLoader()
+        excel_filepath = loader.save_to_excel(
+            data_frames=dfs,
+            input_filename=file.filename,
+            company_name=company_name
+        )
 
-            normal_font = Font(bold=False)
-            no_border = Border(
-                left=Side(style=None),
-                right=Side(style=None),
-                top=Side(style=None),
-                bottom=Side(style=None)
-            )
-            for sheet_name in writer.sheets:
-                ws = writer.sheets[sheet_name]
-                for cell in ws[1]:
-                    cell.font = normal_font
-                    cell.border = no_border
+        excel_filename = os.path.basename(excel_filepath)
 
-        # Clean NaN values
+        # 3. Clean NaN values untuk format respons JSON
         df_sliding_clean = df_sliding.astype(object).where(pd.notnull(df_sliding), None)
         df_profit_clean = df_profit.astype(object).where(pd.notnull(df_profit), None)
 
@@ -127,19 +120,30 @@ async def process_pdf(
             }
         }
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal memproses PDF: {str(e)}")
+
     finally:
+        # Hapus file PDF sementara
         if os.path.exists(temp_pdf_path):
             os.remove(temp_pdf_path)
 
 
 @router.get("/download/{file_id}", summary="Unduh File Excel Hasil Ekstraksi")
 async def download_excel(file_id: str):
-    file_path = os.path.join(tempfile.gettempdir(), file_id)
+    # Cek lokasi file di direktori ExcelLoader
+    loader = ExcelLoader()
+    file_path = os.path.join(loader.output_dir, file_id)
+
+    # Fallback pencarian di folder temp sistem
+    if not os.path.exists(file_path):
+        file_path = os.path.join(tempfile.gettempdir(), file_id)
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File tidak ditemukan atau telah kadaluwarsa")
 
     return FileResponse(
         path=file_path,
-        filename=f"Extracted_{file_id}",
+        filename=file_id,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
